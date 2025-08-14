@@ -56,8 +56,18 @@ def find_obsolete_report_usage(txt: str):
     seen_reports = set()  # track already found reports
     for m in REPORT_RE.finditer(txt):
         report = m.group("report")
+
+        # Skip if already processed
         if report.lower() in seen_reports:
-            continue  # skip duplicates
+            continue
+
+        # Get the text before the match
+        before = txt[:m.start("report")].strip()
+
+        # If the report is preceded by PERFORM (even with spaces/newlines), skip
+        if re.search(r"\bPERFORM\s*$", txt[:m.start("report")], re.IGNORECASE | re.MULTILINE):
+            continue
+
         seen_reports.add(report.lower())
 
         comment = report_comment(report)
