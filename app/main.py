@@ -7,7 +7,11 @@ import json
 app = FastAPI(
     title="Obsolete SAP Report Detector (SAP Note 2480067)"
 )
-
+# --- SNIPPET HELPER ---
+def snippet_at(text: str, start: int, end: int) -> str:
+    s = max(0, start - 60)
+    e = min(len(text), end + 60)
+    return text[s:e].replace("\n", "\\n")
 # List of obsolete reports
 OBSOLETE_REPORTS = [
     "/ATL/PCN874", "/BGLOCS/FI_AA_TAX_DEPR", "/BGLOCS/FI_CFS", "/BGLOCS/FI_FIXASSREP01",
@@ -88,6 +92,7 @@ def detect_obsolete_reports(units: List[Unit]):
         metadata = []
 
         for m in matches:
+            start, end = m["span"]
             metadata.append({
                 "table": "None",
                 "target_type": "Report",
@@ -97,7 +102,8 @@ def detect_obsolete_reports(units: List[Unit]):
                 "used_fields": [],
                 "ambiguous": False,
                 "suggested_statement": m["suggested_statement"],  # Moved here
-                "suggested_fields": None
+                "suggested_fields": None,
+                "snippet": snippet_at(src, start, end)
             })
 
         obj = json.loads(u.model_dump_json())
